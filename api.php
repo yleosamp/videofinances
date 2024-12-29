@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 session_start();
 
 // Conexão com o banco de dados
-$conn = new mysqli('localhost', 'root', '', 'videofinances');
+$conn = new mysqli('localhost', 'video', 'deuseamor', 'videofinances');
 $conn->set_charset('utf8mb4');
 
 if ($conn->connect_error) {
@@ -58,12 +58,12 @@ if ($_POST['action'] === 'delete_video') {
 
 switch ($action) {
     case 'login':
-        $username = $conn->real_escape_string($_POST['username']);
+        $email = $conn->real_escape_string($_POST['email']);
         $password = $_POST['password'];
 
-        $sql = "SELECT id, password FROM users WHERE username = ?";
+        $sql = "SELECT id, password FROM users WHERE email = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('s', $username);
+        $stmt->bind_param('s', $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -418,3 +418,4 @@ switch ($action) {
 }
 
 $conn->close();
+
