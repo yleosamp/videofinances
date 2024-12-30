@@ -119,11 +119,14 @@
         <!-- Lista de Vídeos -->
         <div id="videosList" class="pt-8 space-y-4 hidden">
             <h2 id="monthTitle" class="text-2xl px-2"><strong>Janeiro</strong></h2>
+            
             <div id="videosContainer" class="space-y-2">
                 <!-- Os vídeos serão inseridos aqui dinamicamente -->
             </div>
+            
             <!-- Linha separadora -->
             <div class="h-px bg-[#313131]"></div>
+            
             <!-- Total -->
             <div class="flex items-center justify-between bg-[#313131] px-6 py-3 rounded-md">
                 <span><strong>TOTAL</strong></span>
@@ -132,9 +135,9 @@
                     <button id="totalToggle" class="w-8 h-8 bg-[#B974ED] rounded-md" onclick="toggleTotalView()"></button>
                 </div>
             </div>
-            
-            <!-- Container de Tags (Movido para dentro do videosList) -->
-            <div class="flex flex-wrap gap-2" id="filterTags">
+
+            <!-- Container de Tags para Filtros -->
+            <div class="flex flex-wrap gap-2 mt-4" id="filterTags">
                 <!-- Tags serão inseridas aqui -->
             </div>
         </div>
@@ -284,11 +287,11 @@
         let exchangeRate = 5; // Taxa padrão para fallback
         let isLoginMode = true;
         let totalViewState = 'all'; // 'all', 'paid', 'unpaid'
-        let currentMonthIndex = new Date().getMonth(); // Inicializa com o mês atual (0-11)
         const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         let allTags = []; // Adicione no início do script, junto com outras variáveis globais
         let tempSelectedTags = new Set(); // Adicione esta variável global no início do arquivo
         let activeTagFilters = new Set(); // Adicione no início do arquivo com outras variáveis globais
+        let isLoadingVideos = false;
 
         async function getCurrencyRates() {
             try {
@@ -345,7 +348,22 @@
                     authModal.classList.remove('active');
                     document.getElementById('videosList').classList.remove('hidden');
                     loginButton.textContent = 'Sair';
-                    loadVideos(document.getElementById('monthSelect').selectedIndex + 1);
+                    
+                    const currentYear = new Date().getFullYear();
+                    const currentMonth = "1";
+                    
+                    // Atualizar os selects
+                    document.getElementById('yearSelect').value = currentYear;
+                    document.getElementById('monthSelect').value = currentMonth;
+                    
+                    // Atualizar título
+                    updateMonthTitle(currentMonth, currentYear);
+                    
+                    // Carregar as tags
+                    await loadTags();
+                    
+                    // Carregar os vídeos
+                    await loadVideos(currentMonth, currentYear);
                     
                     if (!isLoginMode) {
                         const loginFormData = new FormData();
@@ -367,40 +385,41 @@
         }
 
         async function checkAuth() {
-            const formData = new FormData();
-            formData.append('action', 'check_auth');
+            if (isLoadingVideos) return;
+            isLoadingVideos = true;
             
             try {
+                const formData = new FormData();
+                formData.append('action', 'check_auth');
+                
                 const response = await fetch('api.php', {
                     method: 'POST',
                     body: formData
                 });
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     loginButton.textContent = 'Sair';
                     document.getElementById('videosList').classList.remove('hidden');
                     
-                    // Inicializar com janeiro do ano atual
                     const currentYear = new Date().getFullYear();
+                    const currentMonth = "1";
+                    
                     yearSelect.value = currentYear;
-                    monthSelect.value = "1";
+                    monthSelect.value = currentMonth;
                     
-                    // Atualizar título e carregar vídeos
-                    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                    document.getElementById('monthTitle').textContent = `${months[0]} ${currentYear}`;
-                    
-                    // Carregar as tags primeiro
                     await loadTags();
-                    
-                    // Depois carregar os vídeos
-                    await loadVideos(1, currentYear);
+                    updateMonthTitle(currentMonth, currentYear);
+                    await loadVideos(currentMonth, currentYear);
                 } else {
                     loginButton.textContent = 'Login / Registro';
                     document.getElementById('videosList').classList.add('hidden');
                 }
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('Erro na autenticação:', error);
+            } finally {
+                isLoadingVideos = false;
             }
         }
 
@@ -553,11 +572,6 @@
 
         // Event Listeners
         document.getElementById('addVideoButton').addEventListener('click', addVideo);
-        document.getElementById('monthSelect').addEventListener('change', function() {
-            const selectedMonth = this.selectedIndex + 1;
-            loadVideos(selectedMonth);
-        });
-
         document.getElementById('peopleCounter').addEventListener('click', function() {
             this.innerHTML = '<input type="number" min="1" value="1" class="w-12 bg-transparent text-center">';
             this.querySelector('input').focus();
@@ -859,36 +873,37 @@
 
         async function deleteVideo() {
             const videoId = document.getElementById('currentVideoId').value;
+            const currentMonth = document.getElementById('monthSelect').value;
+            const currentYear = document.getElementById('yearSelect').value;
             
             if (!confirm('Tem certeza que deseja excluir este vídeo?')) {
                 return;
             }
-            
-            const formData = new FormData();
-            formData.append('action', 'delete_video');
-            formData.append('video_id', videoId);
-            
+
             try {
+                const formData = new FormData();
+                formData.append('action', 'delete_video');
+                formData.append('video_id', videoId);
+
                 const response = await fetch('api.php', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
+                
                 if (data.success) {
-                    // Fechar modal
+                    // Fechar o modal
                     document.getElementById('notesModal').classList.remove('active');
                     
-                    // Recarregar lista de vídeos com o mês e ano atuais
-                    const month = currentMonthIndex + 1;
-                    const year = document.getElementById('yearSelect').value;
-                    await loadVideos(month, year);
+                    // Recarregar os vídeos do mês atual
+                    await loadVideos(currentMonth, currentYear);
                 } else {
-                    alert('Erro ao excluir o vídeo');
+                    throw new Error(data.message || 'Erro ao excluir vídeo');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao excluir o vídeo');
+                alert('Erro ao excluir vídeo. Por favor, tente novamente.');
             }
         }
 
@@ -923,31 +938,34 @@
         }
 
         async function switchMonth(direction) {
-            const container = document.getElementById('videosContainer');
+            if (isLoadingVideos) return;
+            
+            const monthSelect = document.getElementById('monthSelect');
             const yearSelect = document.getElementById('yearSelect');
-            const currentYear = yearSelect ? yearSelect.value : new Date().getFullYear();
+            let currentMonth = parseInt(monthSelect.value);
+            let currentYear = parseInt(yearSelect.value);
             
-            // Adiciona classe para animação
-            container.style.opacity = '0';
-            container.classList.add(direction === 'next' ? 'slide-left' : 'slide-right');
+            if (direction === 'next') {
+                if (currentMonth === 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                } else {
+                    currentMonth++;
+                }
+            } else {
+                if (currentMonth === 1) {
+                    currentMonth = 12;
+                    currentYear--;
+                } else {
+                    currentMonth--;
+                }
+            }
             
-            // Atualiza o índice do mês
-            currentMonthIndex = direction === 'next' 
-                ? (currentMonthIndex + 1) % 12 
-                : (currentMonthIndex - 1 + 12) % 12;
+            monthSelect.value = currentMonth;
+            yearSelect.value = currentYear;
             
-            // Aguarda a animação
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // Carrega os novos dados
-            await loadVideos(currentMonthIndex + 1, currentYear);
-            
-            // Reset da posição para nova animação
-            container.classList.remove('slide-left', 'slide-right');
-            container.style.opacity = '1';
-            
-            // Atualiza o título do mês
-            updateMonthTitle(currentMonthIndex + 1, currentYear);
+            updateMonthTitle(currentMonth, currentYear);
+            await loadVideos(currentMonth, currentYear);
         }
 
         function initDragAndDrop() {
@@ -1308,23 +1326,24 @@
         }
 
         function updateFilterTags(tags) {
-            const container = document.getElementById('filterTags');
-            let html = '';
-            
-            tags.forEach(tag => {
+            const filterTagsContainer = document.getElementById('filterTags');
+            const filterTagsHtml = tags.map(tag => {
+                const color = tag.color;
                 const isActive = activeTagFilters.has(parseInt(tag.id));
-                html += `
-                    <button 
-                        onclick="toggleTagFilter(${tag.id})"
-                        class="px-2 py-1 rounded transition-all duration-200 ${isActive ? 'ring-2 ring-purple-500 ring-offset-1 ring-offset-[#1A1A1A]' : ''}"
-                        style="background-color: ${tag.color}"
-                    >
+                
+                return `
+                    <div class="cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-all"
+                         style="background-color: ${color}; 
+                                color: #202020; 
+                                ${!isActive ? 'filter: brightness(85%);' : ''}
+                                ${isActive ? 'border: 2px solid #FFFFFF; box-shadow: 0 0 5px rgba(255,255,255,0.5);' : ''}"
+                         onclick="toggleTagFilter(${tag.id})">
                         ${tag.name}
-                    </button>
+                    </div>
                 `;
-            });
+            }).join('');
             
-            container.innerHTML = html;
+            filterTagsContainer.innerHTML = filterTagsHtml;
         }
 
         function toggleTagFilter(tagId) {

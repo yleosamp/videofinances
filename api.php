@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 session_start();
 
 // Conexão com o banco de dados
-$conn = new mysqli('localhost', 'video', 'deuseamor', 'videofinances');
+$conn = new mysqli('localhost', 'root', '', 'videofinances');
 $conn->set_charset('utf8mb4');
 
 if ($conn->connect_error) {
