@@ -106,40 +106,25 @@ switch ($action) {
         break;
 
     case 'add_video':
+        $name = $_POST['name'] ?? '';
+        $price = $_POST['price'] ?? '';
+        $currency = $_POST['currency'] ?? 'BRL';
+        $month = $_POST['month'] ?? '';
+        $year = $_POST['year'] ?? '';
         $user_id = $_SESSION['user_id'];
-        $name = $conn->real_escape_string($_POST['name']);
-        $price = floatval($_POST['price']);
-        $currency = $_POST['currency'];
-        $month = intval($_POST['month']);
-        $year = intval($_POST['year']);
-        $people_count = intval($_POST['people_count']);
-        $tags = json_decode($_POST['tags']);
         
-        $conn->begin_transaction();
-        try {
-            // Insere o vídeo
-            $sql = "INSERT INTO videos (user_id, name, price, currency, month, year, people_count) 
-                    VALUES ($user_id, '$name', $price, '$currency', $month, $year, $people_count)";
+        // Primeiro, vamos verificar se a query está correta
+        if ($stmt = $conn->prepare("INSERT INTO videos (user_id, name, price, currency, month, year) VALUES (?, ?, ?, ?, ?, ?)")) {
+            $stmt->bind_param('isdsss', $user_id, $name, $price, $currency, $month, $year);
             
-            if ($conn->query($sql)) {
-                $video_id = $conn->insert_id;
-                
-                // Adiciona as tags selecionadas
-                if (!empty($tags)) {
-                    foreach ($tags as $tag_id) {
-                        $sql = "INSERT INTO video_tags (video_id, tag_id) VALUES ($video_id, $tag_id)";
-                        $conn->query($sql);
-                    }
-                }
-                
-                $conn->commit();
+            if ($stmt->execute()) {
                 echo json_encode(['success' => true]);
             } else {
-                throw new Exception('Erro ao adicionar vídeo');
+                echo json_encode(['success' => false, 'message' => 'Erro ao executar query: ' . $stmt->error]);
             }
-        } catch (Exception $e) {
-            $conn->rollback();
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $stmt->close();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao preparar query: ' . $conn->error]);
         }
         break;
 
@@ -199,14 +184,23 @@ switch ($action) {
         break;
 
     case 'save_notes':
-        $video_id = intval($_POST['video_id']);
-        $user_id = $_SESSION['user_id'];
-        $notes = $conn->real_escape_string($_POST['notes']);
+        $videoId = $_POST['video_id'] ?? '';
+        $notes = $_POST['notes'] ?? '';
+        $name = $_POST['name'] ?? '';
+        $day = $_POST['day'] ?? null;
+        $brlPrice = $_POST['brl_price'] ?? '';
+        $usdPrice = $_POST['usd_price'] ?? '';
         
-        $sql = "UPDATE videos SET notes = '$notes' 
-                WHERE id = $video_id AND user_id = $user_id";
+        $sql = "UPDATE videos SET notes = ?, name = ?, video_day = ?, price = ?, currency = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
         
-        if ($conn->query($sql)) {
+        // Define o preço e moeda baseado na moeda atual do vídeo
+        $currentVideo = $conn->query("SELECT currency FROM videos WHERE id = $videoId")->fetch_assoc();
+        $price = $currentVideo['currency'] === 'BRL' ? $brlPrice : $usdPrice;
+        
+        $stmt->bind_param('ssidsi', $notes, $name, $day, $price, $currentVideo['currency'], $videoId);
+        
+        if ($stmt->execute()) {
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erro ao salvar notas']);

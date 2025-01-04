@@ -46,3 +46,7 @@ CREATE TABLE video_tags (
     FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
+
+-- Adicionar coluna apenas para o dia
+ALTER TABLE videos 
+ADD COLUMN video_day INT NULL;

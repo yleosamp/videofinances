@@ -26,7 +26,7 @@ $activeTagFilters = isset($_POST['tagFilters']) ? json_decode($_POST['tagFilters
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
-// Configurar cabeçalhos (adicionando coluna de Tags)
+// Configurar cabeçalhos
 $sheet->setCellValue('A1', 'Nome do Vídeo');
 $sheet->setCellValue('B1', 'Preço');
 $sheet->setCellValue('C1', 'Moeda');
@@ -34,6 +34,7 @@ $sheet->setCellValue('D1', 'Nº de Pessoas');
 $sheet->setCellValue('E1', 'Status');
 $sheet->setCellValue('F1', 'Tags');
 $sheet->setCellValue('G1', 'Notas');
+$sheet->setCellValue('H1', 'Dia');
 
 // Estilizar cabeçalhos
 $headerStyle = [
@@ -44,7 +45,7 @@ $headerStyle = [
     ],
     'font' => ['color' => ['rgb' => 'FFFFFF']]
 ];
-$sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+$sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
 
 // Buscar dados com tags
 $sql = "SELECT v.*, GROUP_CONCAT(t.name) as tag_names 
@@ -114,6 +115,7 @@ while ($video = $result->fetch_assoc()) {
     $sheet->setCellValue('E' . $row, $video['is_paid'] ? 'Pago' : 'Não Pago');
     $sheet->setCellValue('F' . $row, $video['tag_names']);
     $sheet->setCellValue('G' . $row, $video['notes']);
+    $sheet->setCellValue('H' . $row, $video['video_day']);
     
     // Calcular totais
     if ($video['currency'] === 'USD') {
@@ -131,7 +133,7 @@ while ($video = $result->fetch_assoc()) {
             'startColor' => ['rgb' => $video['is_paid'] ? '9FFEBB' : 'FF696C']
         ]
     ];
-    $sheet->getStyle('A'.$row.':G'.$row)->applyFromArray($rowStyle);
+    $sheet->getStyle('A'.$row.':H'.$row)->applyFromArray($rowStyle);
     
     $row++;
 }
@@ -141,13 +143,13 @@ $totalRow = $row;
 $sheet->setCellValue('A' . $totalRow, 'TOTAL');
 $sheet->setCellValue('B' . $totalRow, number_format($totalBRL, 2));
 $sheet->setCellValue('C' . $totalRow, 'BRL');
-$sheet->mergeCells('D'.$totalRow.':G'.$totalRow);
+$sheet->mergeCells('D'.$totalRow.':H'.$totalRow);
 
 $usdRow = $row + 1;
 $sheet->setCellValue('A' . $usdRow, 'TOTAL');
 $sheet->setCellValue('B' . $usdRow, number_format($totalUSD, 2));
 $sheet->setCellValue('C' . $usdRow, 'USD');
-$sheet->mergeCells('D'.$usdRow.':G'.$usdRow);
+$sheet->mergeCells('D'.$usdRow.':H'.$usdRow);
 
 // Estilizar linhas de total
 $totalStyle = [
@@ -157,11 +159,11 @@ $totalStyle = [
         'startColor' => ['rgb' => 'B974ED']
     ]
 ];
-$sheet->getStyle('A'.$totalRow.':G'.$totalRow)->applyFromArray($totalStyle);
-$sheet->getStyle('A'.$usdRow.':G'.$usdRow)->applyFromArray($totalStyle);
+$sheet->getStyle('A'.$totalRow.':H'.$totalRow)->applyFromArray($totalStyle);
+$sheet->getStyle('A'.$usdRow.':H'.$usdRow)->applyFromArray($totalStyle);
 
 // Ajustar largura das colunas
-foreach(range('A','G') as $col) {
+foreach(range('A','H') as $col) {
     $sheet->getColumnDimension($col)->setAutoSize(true);
 }
 

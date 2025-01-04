@@ -206,6 +206,19 @@
                 </div>
             </div>
             
+            <!-- <div class="mb-4">
+                <label class="text-sm text-gray-400 block mb-2">Data do vídeo</label>
+                <input type="date" id="modalVideoDate" class="w-full bg-[#202020] rounded-md p-4 text-white">
+            </div> -->
+            
+            <div class="mb-4">
+                <label class="text-sm text-gray-400 block mb-2">Dia do vídeo</label>
+                <div class="flex gap-2 items-center">
+                    <input type="number" id="modalVideoDay" min="1" max="31" class="w-24 bg-[#202020] rounded-md p-4" placeholder="Dia">
+                    <span class="text-gray-400" id="modalVideoMonthYear"></span>
+                </div>
+            </div>
+            
             <input type="hidden" id="currentVideoId">
             <button onclick="saveNotes()" class="w-full bg-[#3E62A5] text-[#ADC8FB] py-2 rounded-md text-lg font-medium">
                 Salvar
@@ -426,43 +439,49 @@
         async function addVideo() {
             const name = document.getElementById('videoName').value;
             const price = document.getElementById('videoPrice').value;
+            const currency = document.getElementById('currencyToggle').textContent;
+            const selectedMonth = document.getElementById('monthSelect').value;
+            const selectedYear = document.getElementById('yearSelect').value;
             
             if (!name || !price) {
-                alert('Preencha o nome e o preço do vídeo');
+                alert('Por favor, preencha todos os campos');
                 return;
             }
-
-            const currency = document.getElementById('currencyToggle').textContent.trim();
-            const month = document.getElementById('monthSelect').value;
-            const year = document.getElementById('yearSelect').value;
-            const peopleCount = document.getElementById('peopleCounter').querySelector('input')?.value || 1;
 
             const formData = new FormData();
             formData.append('action', 'add_video');
             formData.append('name', name);
             formData.append('price', price);
             formData.append('currency', currency === 'R$' ? 'BRL' : 'USD');
-            formData.append('month', month);
-            formData.append('year', year);
-            formData.append('people_count', peopleCount);
-            formData.append('tags', JSON.stringify(Array.from(selectedTags)));
-
+            formData.append('month', selectedMonth);
+            formData.append('year', selectedYear);
+            
             try {
                 const response = await fetch('api.php', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('videoName').value = '';
-                    document.getElementById('videoPrice').value = '';
-                    selectedTags.clear();
-                    tempSelectedTags.clear();
-                    updateSelectedTagsDisplay();
-                    await loadVideos(month, year);
+                
+                // Debugar a resposta
+                const responseText = await response.text();
+                console.log('Resposta da API:', responseText);
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    if (data.success) {
+                        document.getElementById('videoName').value = '';
+                        document.getElementById('videoPrice').value = '';
+                        selectedTags.clear();
+                        tempSelectedTags.clear();
+                        updateSelectedTagsDisplay();
+                        await loadVideos(selectedMonth, selectedYear);
+                    }
+                } catch (jsonError) {
+                    console.error('Erro ao parsear JSON:', jsonError);
+                    console.log('Resposta inválida:', responseText);
                 }
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('Erro na requisição:', error);
             }
         }
 
@@ -520,7 +539,8 @@
                                 </div>
                                 <div class="flex items-center justify-between bg-[#313131] px-6 py-3 rounded-md w-full">
                                     <div class="flex items-center gap-4 flex-1">
-                                        <span class="cursor-pointer flex-1" onclick="showNotes('${video.id}', '${video.notes || ''}', '${video.name}', ${price}, '${video.currency}')">${video.name}</span>
+                                        <span class="cursor-pointer flex-1" 
+                                              onclick="showNotes(${video.id}, '${video.notes || ''}', '${video.name}', ${video.price}, '${video.currency}', ${video.video_day})">${video.name}</span>
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <span class="price-tag ${video.currency === 'USD' ? 'price-usd' : 'price-brl'}" 
@@ -716,18 +736,18 @@
             const videoId = document.getElementById('currentVideoId').value;
             const notes = document.getElementById('videoNotes').value;
             const name = document.getElementById('modalVideoName').value;
-            const price = document.getElementById('modalBrlPrice').value;
-            const currency = 'BRL'; // ou pode ser dinâmico se necessário
-            const peopleCount = document.getElementById('modalPeopleCount').value;
+            const day = document.getElementById('modalVideoDay').value;
+            const brlPrice = document.getElementById('modalBrlPrice').value;
+            const usdPrice = document.getElementById('modalUsdPrice').value;
             
             const formData = new FormData();
-            formData.append('action', 'save_video_details');
+            formData.append('action', 'save_notes');
             formData.append('video_id', videoId);
             formData.append('notes', notes);
             formData.append('name', name);
-            formData.append('price', price);
-            formData.append('currency', currency);
-            formData.append('people_count', peopleCount);
+            formData.append('day', day);
+            formData.append('brl_price', brlPrice);
+            formData.append('usd_price', usdPrice);
             
             try {
                 const response = await fetch('api.php', {
@@ -737,18 +757,14 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    // Pegar o mês e ano atuais antes de recarregar
-                    const currentMonth = document.getElementById('monthSelect').value;
-                    const currentYear = document.getElementById('yearSelect').value;
-                    
-                    // Fechar o modal
                     document.getElementById('notesModal').classList.remove('active');
-                    
-                    // Recarregar os vídeos mantendo o mês e ano atuais
-                    await loadVideos(currentMonth, currentYear);
+                    const month = document.getElementById('monthSelect').value;
+                    const year = document.getElementById('yearSelect').value;
+                    await loadVideos(month, year);
                 }
             } catch (error) {
-                console.error('Erro ao salvar:', error);
+                console.error('Erro:', error);
+                alert('Erro ao salvar notas. Por favor, tente novamente.');
             }
         }
 
@@ -907,23 +923,31 @@
             }
         }
 
-        function showNotes(videoId, notes, name, price, currency) {
+        async function showNotes(videoId, notes, name, price, currency, videoDay = null) {
             document.getElementById('currentVideoId').value = videoId;
             document.getElementById('videoNotes').value = notes || '';
-            document.getElementById('modalVideoName').value = name;
+            document.getElementById('modalVideoName').value = name || '';
             
-            // Definir valores iniciais
+            // Configurar os valores em real e dólar
             if (currency === 'BRL') {
-                document.getElementById('modalBrlPrice').value = price;
+                document.getElementById('modalBrlPrice').value = price.toFixed(2);
                 document.getElementById('modalUsdPrice').value = (price / exchangeRate).toFixed(2);
             } else {
-                document.getElementById('modalUsdPrice').value = price;
+                document.getElementById('modalUsdPrice').value = price.toFixed(2);
                 document.getElementById('modalBrlPrice').value = (price * exchangeRate).toFixed(2);
             }
             
-            // Carregar tags do vídeo
-            loadVideoTags();
+            // Configurar o dia e mostrar mês/ano selecionado
+            document.getElementById('modalVideoDay').value = videoDay || '';
+            const selectedMonth = document.getElementById('monthSelect').value;
+            const selectedYear = document.getElementById('yearSelect').value;
+            document.getElementById('modalVideoMonthYear').textContent = 
+                `de ${months[parseInt(selectedMonth) - 1]} de ${selectedYear}`;
             
+            // Carregar tags do vídeo
+            await loadVideoTags();
+            
+            // Mostrar o modal
             document.getElementById('notesModal').classList.add('active');
         }
 
