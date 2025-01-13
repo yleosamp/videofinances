@@ -1,0 +1,16 @@
+{
+    "name": "leonardo/financa",
+    "autoload": {
+        "psr-4": {
+            "Leonardo\\Financa\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "yleo"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "1.29.0"
+    }
+}
