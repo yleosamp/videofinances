@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciamento de Vídeos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" href="../icon/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="icon/favicon.ico" type="image/x-icon">
     <style>
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #202020;
-            color: #B9B9B9;
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #E0E0E0;
         }
         .modal {
             display: none;
@@ -20,7 +20,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
         }
         .modal.active {
             display: flex;
@@ -29,52 +30,160 @@
         }
         select, input, button {
             outline: none;
+            transition: all 0.2s ease;
         }
         .price-tag {
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
         .price-usd {
-            background-color: #9FFEBB;
-            color: #202020;
+            background-color: #2D7D4C;
+            color: #9FFEBB;
         }
         .price-brl {
-            background-color: #E9FF69;
-            color: #202020;
+            background-color: #3E62A5;
+            color: #ADC8FB;
         }
         .price-total {
-            background-color: #B974ED;
-            color: #202020;
+            background-color: #6B3A9D;
+            color: #D4B6FF;
         }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
+        .card {
+            background: #1E1E1E;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
-        input[type=number] {
-            -moz-appearance: textfield;
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        .drag-line {
-            border: 2px dashed #3E62A5;
-            margin: 8px 0;
-            opacity: 0;
-            transition: opacity 0.2s;
+        .btn {
+            @apply px-6 py-3 rounded-full font-medium transition-all duration-200 shadow-md hover:shadow-lg active:shadow-sm;
+        }
+        .btn-primary {
+            @apply bg-[#3E62A5] text-[#ADC8FB] hover:bg-[#3E62A5]/90 active:bg-[#3E62A5]/80;
+        }
+        .btn-secondary {
+            @apply bg-[#2A2A2A] text-gray-300 hover:bg-[#333333] active:bg-[#292929] border border-gray-700;
+        }
+        .input-field {
+            @apply bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-100 focus:border-purple-500 transition-all duration-200;
+        }
+        .select-field {
+            @apply bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-100 appearance-none cursor-pointer hover:border-gray-600 focus:border-purple-500;
+        }
+        #addVideoButton {
+            @apply bg-[#3E62A5] text-[#ADC8FB] hover:bg-[#3E62A5]/90 transition-all shadow-lg hover:shadow-[#3E62A5]/20;
+        }
+        #openTagsButton, #currencyToggle {
+            @apply bg-[#2A2A2A] text-gray-300 hover:bg-[#333333] border border-gray-700 transition-all;
+        }
+        #exportExcelButton {
+            @apply bg-[#2D7D4C] text-[#9FFEBB] hover:bg-[#2D7D4C]/90 transition-all shadow-lg hover:shadow-[#2D7D4C]/20;
+        }
+        .video-card {
+            @apply bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 
+                   rounded-xl p-4 flex items-center gap-4 
+                   transition-all duration-200
+                   hover:border-[#3E62A5] hover:bg-gray-800/70
+                   hover:shadow-lg hover:shadow-[#3E62A5]/10;
+        }
+        
+        .video-card:hover {
+            @apply border-[#3E62A5] shadow-lg shadow-[#3E62A5]/10 transform -translate-y-0.5;
+        }
+        
+        .video-info {
+            @apply flex-1 cursor-pointer;
+        }
+        
+        .video-title {
+            @apply text-gray-100 font-medium mb-1;
+        }
+        
+        .video-tags {
+            @apply flex flex-wrap gap-1.5 mt-2;
+        }
+        
+        .video-tag {
+            @apply px-2.5 py-1 rounded-full text-xs font-medium
+                   shadow-sm transition-transform hover:scale-105;
+        }
+        
+        .video-actions {
+            @apply flex items-center gap-3;
+        }
+        
+        .payment-toggle {
+            @apply transition-all duration-200;
+        }
+        
+        .payment-toggle.paid {
+            @apply bg-[#2D7D4C]/20 text-[#9FFEBB] border-2 border-[#2D7D4C]
+                   hover:bg-[#2D7D4C]/30;
+        }
+        
+        .payment-toggle.unpaid {
+            @apply bg-gray-700/20 text-gray-400 border-2 border-gray-600
+                   hover:bg-gray-700/30 hover:border-gray-500;
+        }
+        
+        .drag-handle {
+            @apply text-gray-500 hover:text-gray-400 cursor-move p-2;
+        }
+
+        .price-tag {
+            @apply py-2 px-4 rounded-xl font-medium transition-all duration-200;
         }
     </style>
+    <script>
+        function switchUI(version) {
+            localStorage.setItem('uiVersion', version);
+            window.location.href = version === 'new' ? 'index.php' : 'originalUi.php';
+        }
+
+        function handleAuth() {
+            const loginButton = document.getElementById('loginButton');
+            if (loginButton.textContent === 'Sair') {
+                handleLogout();
+            } else {
+                document.getElementById('authModal').classList.add('active');
+            }
+        }
+
+        function handleLogout() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            fetch('api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => location.reload())
+            .catch(error => console.error('Erro ao fazer logout:', error));
+        }
+    </script>
 </head>
 <body class="min-h-screen flex flex-col p-8">
-    <!-- Botão de Login/Registro -->
-    <div class="self-end mb-8">
-        <button id="loginButton" class="bg-[#3E62A5] text-[#ADC8FB] px-6 py-2 rounded-md text-lg font-medium hover:bg-[#3E62A5]/90 transition-colors">
+    <!-- Botões de navegação -->
+    <div class="self-end mb-8 flex items-center gap-4">
+        <button onclick="switchUI('old')" class="bg-[#2A2A2A] text-gray-300 px-6 py-2.5 rounded-full font-medium transition-all hover:bg-[#333333] border border-gray-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 9H17a1 1 0 110 2H4.414l5.293 5.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+            UI Original
+        </button>
+        <button id="loginButton" onclick="handleAuth()" class="bg-[#2A2A2A] text-gray-300 px-6 py-2.5 rounded-full font-medium transition-all hover:bg-[#333333] border border-gray-700 ">
             Login / Registro
         </button>
     </div>
 
-    <div class="w-full max-w-md mx-auto space-y-4">
+    <div class="w-full max-w-xl mx-auto space-y-6">
         <!-- Seletor Mês, Ano e Pessoas -->
-        <div class="grid grid-cols-[1fr,auto,auto] gap-3">
-            <select id="monthSelect" class="bg-[#313131] rounded-md px-6 py-2.5 text-lg appearance-none cursor-pointer">
+        <div class="grid grid-cols-[1fr,auto,auto] gap-4">
+            <select id="monthSelect" class="bg-[#151515] border border-[#313131] text-gray-100 px-6 py-3.5 rounded-xl  hover:border-[#505050] focus:border-purple-500 transition-all cursor-pointer appearance-none">
                 <option value="1">Janeiro</option>
                 <option value="2">Fevereiro</option>
                 <option value="3">Março</option>
@@ -88,31 +197,36 @@
                 <option value="11">Novembro</option>
                 <option value="12">Dezembro</option>
             </select>
-            <select id="yearSelect" class="bg-[#313131] rounded-md px-4 py-2.5 w-24 text-center appearance-none cursor-pointer">
-                <!-- Anos serão adicionados via JavaScript -->
+            
+            <select id="yearSelect" class="bg-[#151515] border border-[#313131] text-gray-100 px-6 py-3.5 rounded-xl hover:border-[#505050] focus:border-purple-500 transition-all cursor-pointer appearance-none w-32">
+                <!-- Anos via JavaScript -->
             </select>
-            <div id="peopleCounter" class="bg-[#313131] rounded-md px-6 py-2.5 flex items-center cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            
+            <div id="peopleCounter" class="bg-[#151515] border border-[#313131] rounded-xl p-3.5 cursor-pointer hover:bg-gray-700 transition-all border border-gray-700 hover:border-[#505050]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                 </svg>
             </div>
         </div>
 
-        <!-- Inputs -->
+        <!-- Inputs de Nome e Tags -->
         <div class="grid grid-cols-[1fr,auto] gap-3">
-            <input type="text" id="videoName" placeholder="Nome" class="bg-[#313131] rounded-md px-6 py-2.5">
-            <button id="openTagsButton" class="bg-[#3E62A5] text-[#ADC8FB] px-4 py-2 rounded-md">
+            <input type="text" id="videoName" placeholder="Nome do vídeo" class="bg-[#151515] border border-[#313131] text-gray-100 px-6 py-3.5 rounded-xl hover:border-[#505050] focus:border-purple-500 transition-all placeholder-gray-500">
+            <button id="openTagsButton" class="bg-purple-600 text-white px-6 py-3.5 rounded-xl hover:border-[#505050] transition-all font-medium">
                 Tags
             </button>
         </div>
 
-        <div class="flex">
-            <input type="text" id="videoPrice" placeholder="0" class="w-24 bg-[#313131] rounded-l-md px-6 py-2.5">
-            <button id="currencyToggle" class="bg-[#E9FF69] text-black px-6 py-2.5 rounded-r-md font-medium min-w-[60px]">R$</button>
+        <!-- Input de Preço -->
+        <div class="flex items-center">
+            <input type="text" id="videoPrice" placeholder="0" class="bg-[#151515] border border-[#313131] text-gray-100 px-6 py-2.5 rounded-l-xl hover:border-[#505050] focus:border-purple-500 transition-all w-32 text-center placeholder-gray-500 flex-shrink-0">
+            <button id="currencyToggle" class="bg-[#3E62A5] text-white px-6 py-2.5 rounded-r-xl font-medium min-w-[60px] hover:border-[#505050] transition-all flex-shrink-0">
+                U$
+            </button>
         </div>
 
         <!-- Botão Adicionar -->
-        <button id="addVideoButton" class="w-full bg-[#3E62A5] text-[#ADC8FB] py-3 rounded-md text-lg font-medium">
+        <button id="addVideoButton" class="w-full bg-purple-600 text-white py-4 rounded-xl text-lg font-medium hover:border-[#505050] transition-all shadow-lg hover:shadow-purple-500/20">
             Adicionar
         </button>
 
@@ -128,7 +242,7 @@
             <div class="h-px bg-[#313131]"></div>
             
             <!-- Total -->
-            <div class="flex items-center justify-between bg-[#313131] px-6 py-3 rounded-md">
+            <div class="flex items-center justify-between  px-6 py-3 rounded-md bg-[#151515] rounded-xl border border-[#313131]">
                 <span><strong>TOTAL</strong></span>
                 <div class="flex items-center gap-3">
                     <span id="totalValue" class="price-tag price-total" onclick="toggleTotalCurrency()">R$ 0</span>
@@ -137,7 +251,7 @@
             </div>
 
             <!-- Container de Tags para Filtros -->
-            <div class="flex flex-wrap gap-2 mt-4" id="filterTags">
+            <div class="flex flex-wrap gap-2 mt-4 " id="filterTags">
                 <!-- Tags serão inseridas aqui -->
             </div>
         </div>
@@ -296,52 +410,86 @@
         </div>
     </div>
 
+    <!-- Template para o card de vídeo -->
+    <template id="videoTemplate">
+        <div class="video-card group">
+            <!-- Alça de arrasto -->
+            <div class="drag-handle p-2 text-gray-500 hover:text-gray-400 cursor-move">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                </svg>
+            </div>
+
+            <!-- Informações do vídeo -->
+            <div class="flex-1 space-y-2">
+                <h3 class="text-gray-100 font-medium text-lg group-hover:text-[#ADC8FB] transition-colors cursor-pointer"></h3>
+                <div class="video-tags flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <!-- Ações do vídeo -->
+            <div class="flex items-center gap-4">
+                <!-- Status de pagamento -->
+                <button class="payment-toggle w-10 h-10 rounded-xl flex items-center justify-center transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+
+                <!-- Valor -->
+                <span class="price-tag min-w-[100px] text-center cursor-pointer"></span>
+            </div>
+        </div>
+    </template>
+
     <script>
         let exchangeRate = 5; // Taxa padrão para fallback
         let isLoginMode = true;
         let totalViewState = 'all'; // 'all', 'paid', 'unpaid'
         const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        let allTags = []; // Adicione no início do script, junto com outras variáveis globais
-        let tempSelectedTags = new Set(); // Adicione esta variável global no início do arquivo
-        let activeTagFilters = new Set(); // Adicione no início do arquivo com outras variáveis globais
+        let selectedTags = new Set();
+        let tempSelectedTags = new Set();
+        let allTags = [];
+        let activeTagFilters = new Set();
         let isLoadingVideos = false;
+        let selectedVideoTags = new Set();
+        let tempVideoTags = new Set();
 
-        async function getCurrencyRates() {
-            try {
-                const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,BRL-USD');
-                const data = await response.json();
-                
-                // Atualiza a taxa de câmbio
-                exchangeRate = parseFloat(data.USDBRL.bid);
-                
-                return {
-                    USD_BRL: exchangeRate,
-                    BRL_USD: parseFloat(data.BRLUSD.bid)
-                };
-            } catch (error) {
-                console.error('Erro ao obter taxas de câmbio:', error);
-                
-                // Retorna valores padrão caso ocorra um erro
-                return {
-                    USD_BRL: exchangeRate, // Mantém o valor padrão de fallback
-                    BRL_USD: 1 / exchangeRate // Usa o inverso para a taxa BRL para USD
-                };
+        function switchUI(version) {
+            // Salva a preferência do usuário
+            localStorage.setItem('uiVersion', version);
+            
+            // Redireciona para a UI apropriada
+            if (version === 'new') {
+                window.location.href = 'index.php';
+            } else {
+                window.location.href = 'originalUi.php';
             }
         }
 
-        // Exemplo de uso
-        getCurrencyRates().then(rates => {
-            console.log('Taxas de câmbio:', rates);
-        });
-
-
-        async function updateExchangeRates() {
-            const rates = await getCurrencyRates();
-            exchangeRate = rates.USD_BRL;
+        function handleAuth() {
+            if (loginButton.textContent === 'Sair') {
+                handleLogout();
+            } else {
+                document.getElementById('authModal').classList.add('active');
+            }
         }
 
         async function handleAuth(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
+            
+            // Se for um clique no botão (sem evento de form)
+            if (!e || !e.target || e.target.tagName !== 'FORM') {
+                if (loginButton.textContent === 'Sair') {
+                    handleLogout();
+                } else {
+                    document.getElementById('authModal').classList.add('active');
+                }
+                return;
+            }
+
+            // Se chegou aqui, é um submit do formulário
             const email = document.querySelector('#authForm input[type="email"]').value;
             const password = document.querySelector('#authForm input[type="password"]').value;
 
@@ -395,6 +543,54 @@
                 console.error('Erro:', error);
                 alert('Erro na autenticação');
             }
+        }
+
+        async function handleLogout() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            try {
+                await fetch('api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                location.reload();
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+
+        async function getCurrencyRates() {
+            try {
+                const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,BRL-USD');
+                const data = await response.json();
+                
+                // Atualiza a taxa de câmbio
+                exchangeRate = parseFloat(data.USDBRL.bid);
+                
+                return {
+                    USD_BRL: exchangeRate,
+                    BRL_USD: parseFloat(data.BRLUSD.bid)
+                };
+            } catch (error) {
+                console.error('Erro ao obter taxas de câmbio:', error);
+                
+                // Retorna valores padrão caso ocorra um erro
+                return {
+                    USD_BRL: exchangeRate, // Mantém o valor padrão de fallback
+                    BRL_USD: 1 / exchangeRate // Usa o inverso para a taxa BRL para USD
+                };
+            }
+        }
+
+        // Exemplo de uso
+        getCurrencyRates().then(rates => {
+            console.log('Taxas de câmbio:', rates);
+        });
+
+
+        async function updateExchangeRates() {
+            const rates = await getCurrencyRates();
+            exchangeRate = rates.USD_BRL;
         }
 
         async function checkAuth() {
@@ -456,32 +652,35 @@
             formData.append('month', selectedMonth);
             formData.append('year', selectedYear);
             
+            // Adiciona as tags selecionadas
+            const tagsArray = Array.from(selectedTags).map(tagId => ({
+                id: tagId,
+                name: allTags.find(t => t.id === tagId)?.name || '',
+                color: allTags.find(t => t.id === tagId)?.color || ''
+            }));
+            formData.append('tags', JSON.stringify(tagsArray));
+            
             try {
                 const response = await fetch('api.php', {
                     method: 'POST',
                     body: formData
                 });
                 
-                // Debugar a resposta
-                const responseText = await response.text();
-                console.log('Resposta da API:', responseText);
-                
-                try {
-                    const data = JSON.parse(responseText);
-                    if (data.success) {
-                        document.getElementById('videoName').value = '';
-                        document.getElementById('videoPrice').value = '';
-                        selectedTags.clear();
-                        tempSelectedTags.clear();
-                        updateSelectedTagsDisplay();
-                        await loadVideos(selectedMonth, selectedYear);
-                    }
-                } catch (jsonError) {
-                    console.error('Erro ao parsear JSON:', jsonError);
-                    console.log('Resposta inválida:', responseText);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('videoName').value = '';
+                    document.getElementById('videoPrice').value = '';
+                    selectedTags.clear();
+                    tempSelectedTags.clear();
+                    updateSelectedTagsDisplay();
+                    await loadVideos(selectedMonth, selectedYear);
+                    document.getElementById('videosList').classList.remove('hidden');
+                } else {
+                    throw new Error(data.message || 'Erro ao adicionar vídeo');
                 }
             } catch (error) {
-                console.error('Erro na requisição:', error);
+                console.error('Erro:', error);
+                alert('Erro ao adicionar vídeo. Por favor, tente novamente.');
             }
         }
 
@@ -537,7 +736,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 15h8" />
                                     </svg>
                                 </div>
-                                <div class="flex items-center justify-between bg-[#313131] px-6 py-3 rounded-md w-full">
+                                <div class="flex items-center justify-between bg-[#151515] rounded-xl border border-[#313131] px-6 py-3 rounded-md w-full">
                                     <div class="flex items-center gap-4 flex-1">
                                         <span class="cursor-pointer flex-1" 
                                               onclick="showNotes(${video.id}, '${video.notes || ''}', '${video.name}', ${video.price}, '${video.currency}', ${video.video_day})">${video.name}</span>
@@ -599,18 +798,25 @@
 
         document.getElementById('currencyToggle').addEventListener('click', function() {
             this.textContent = this.textContent === 'R$' ? 'U$' : 'R$';
-            this.classList.toggle('bg-[#E9FF69]');
-            this.classList.toggle('bg-[#9FFEBB]');
+            if (this.textContent === 'R$') {
+                this.classList.remove('bg-[#3E62A5]');
+                this.classList.add('bg-[#2D7D4C]');
+            } else {
+                this.classList.remove('bg-[#2D7D4C]');
+                this.classList.add('bg-[#3E62A5]');
+            }
         });
 
         // Configurar anos no select e inicializar página
         document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            
+            // Configurar anos no select
             const yearSelect = document.getElementById('yearSelect');
             const monthSelect = document.getElementById('monthSelect');
             const currentYear = new Date().getFullYear();
             const years = new Set([2024, currentYear, currentYear + 1]);
             
-            // Configurar anos
             yearSelect.innerHTML = '';
             Array.from(years).sort().forEach(year => {
                 const option = document.createElement('option');
@@ -619,11 +825,9 @@
                 yearSelect.appendChild(option);
             });
             
-            // Definir valores iniciais
             yearSelect.value = currentYear;
             monthSelect.value = "1"; // Janeiro
             
-            // Event listeners
             yearSelect.addEventListener('change', function() {
                 updateMonthTitle(monthSelect.value, this.value);
                 loadVideos(monthSelect.value, this.value);
@@ -634,7 +838,19 @@
                 loadVideos(this.value, yearSelect.value);
             });
 
-            // Inicializar com janeiro do ano atual
+            // Event listeners para tags
+            document.getElementById('openTagsButton').addEventListener('click', () => {
+                tempSelectedTags = new Set(selectedTags);
+                document.getElementById('tagsModal').classList.add('active');
+                loadTags();
+            });
+
+            document.getElementById('tagsModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('tagsModal')) {
+                    closeTagsModal();
+                }
+            });
+
             updateMonthTitle(1, currentYear);
             await loadVideos(1, currentYear);
         });
@@ -652,20 +868,7 @@
         const authForm = document.getElementById('authForm');
         const toggleAuthMode = document.getElementById('toggleAuthMode');
 
-        loginButton.addEventListener('click', () => {
-            if (loginButton.textContent === 'Sair') {
-                const formData = new FormData();
-                formData.append('action', 'logout');
-                fetch('api.php', {
-                    method: 'POST',
-                    body: formData
-                }).then(() => {
-                    location.reload();
-                });
-            } else {
-                authModal.classList.add('active');
-            }
-        });
+        loginButton.addEventListener('click', handleAuth);
 
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) {
@@ -1100,13 +1303,6 @@
             }
         }
 
-        let selectedTags = new Set();
-
-        document.getElementById('openTagsButton').addEventListener('click', () => {
-            document.getElementById('tagsModal').classList.add('active');
-            loadTags();
-        });
-
         function closeTagsModal() {
             // Ao fechar sem salvar, descarta as alterações temporárias
             tempSelectedTags = new Set(selectedTags);
@@ -1173,140 +1369,7 @@
             updateTagsList(allTags);
         }
 
-        let selectedVideoTags = new Set();
-        let tempVideoTags = new Set(); // Adicione esta variável global
-
-        async function loadVideoTags() {
-            const videoId = document.getElementById('currentVideoId').value;
-            const formData = new FormData();
-            formData.append('action', 'get_video_tags');
-            formData.append('video_id', videoId);
-            
-            try {
-                const response = await fetch('api.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    selectedVideoTags = new Set(data.selectedTags.map(tag => parseInt(tag.id)));
-                    tempVideoTags = new Set(selectedVideoTags); // Copia para o estado temporário
-                    updateVideoTagsSelection(data.allTags);
-                    updateVideoTagsList(data.selectedTags);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar tags do vídeo:', error);
-            }
-        }
-
-        function updateVideoTagsSelection(tags) {
-            const container = document.getElementById('videoTagsSelection');
-            let html = '';
-            
-            tags.forEach(tag => {
-                const isSelected = tempVideoTags.has(parseInt(tag.id)); // Usa o estado temporário
-                html += `
-                    <div class="flex items-center justify-between bg-[#202020] p-2 rounded-md">
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
-                                   onchange="toggleVideoTag(${tag.id})" class="rounded">
-                            <span class="px-2 py-1 rounded" style="background-color: ${tag.color}">
-                                ${tag.name}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function updateVideoTagsList(tags) {
-            const container = document.getElementById('videoTagsList');
-            let html = '';
-            
-            tags.forEach(tag => {
-                html += `
-                    <span class="px-2 py-1 rounded" style="background-color: ${tag.color}">
-                        ${tag.name}
-                    </span>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function toggleVideoTag(tagId) {
-            tagId = parseInt(tagId);
-            if (tempVideoTags.has(tagId)) {
-                tempVideoTags.delete(tagId);
-            } else {
-                tempVideoTags.add(tagId);
-            }
-            updateVideoTagsSelection(allTags);
-        }
-
-        async function saveVideoTags() {
-            const videoId = document.getElementById('currentVideoId').value;
-            const formData = new FormData();
-            formData.append('action', 'save_video_tags');
-            formData.append('video_id', videoId);
-            formData.append('tags', JSON.stringify(Array.from(tempVideoTags))); // Usa o estado temporário
-            
-            try {
-                const response = await fetch('api.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    selectedVideoTags = new Set(tempVideoTags); // Atualiza o estado permanente
-                    closeVideoTagsModal();
-                    await loadVideoTags();
-                    const month = document.getElementById('monthSelect').value;
-                    const year = document.getElementById('yearSelect').value;
-                    await loadVideos(month, year);
-                }
-            } catch (error) {
-                console.error('Erro ao salvar tags do vídeo:', error);
-            }
-        }
-
-        function closeVideoTagsModal() {
-            tempVideoTags = new Set(selectedVideoTags); // Reseta o estado temporário
-            document.getElementById('videoTagsModal').classList.remove('active');
-        }
-
-        function updateSelectedTagsDisplay() {
-            const container = document.createElement('div');
-            container.className = 'flex flex-wrap gap-2 mt-2';
-            
-            selectedTags.forEach(tagId => {
-                const tag = allTags.find(t => t.id === tagId);
-                if (tag) {
-                    const tagElement = document.createElement('span');
-                    tagElement.className = 'px-2 py-1 rounded text-sm';
-                    tagElement.style.backgroundColor = tag.color;
-                    tagElement.textContent = tag.name;
-                    container.appendChild(tagElement);
-                }
-            });
-            
-            // Encontra ou cria o container para exibir as tags selecionadas
-            let displayContainer = document.getElementById('selectedTagsDisplay');
-            if (!displayContainer) {
-                displayContainer = document.createElement('div');
-                displayContainer.id = 'selectedTagsDisplay';
-                document.getElementById('openTagsButton').parentNode.appendChild(displayContainer);
-            }
-            displayContainer.innerHTML = '';
-            displayContainer.appendChild(container);
-        }
-
         function saveTagSelections() {
-            // Copia as tags temporárias para as selecionadas
             selectedTags = new Set(tempSelectedTags);
             updateSelectedTagsDisplay();
             closeTagsModal();
@@ -1344,9 +1407,53 @@
             loadTags();
         }
 
-        function openVideoTagsModal() {
-            document.getElementById('videoTagsModal').classList.add('active');
-            loadVideoTags();
+        async function openVideoTagsModal() {
+            const videoId = document.getElementById('currentVideoId').value;
+            const videoTagsSelection = document.getElementById('videoTagsSelection');
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'get_video_tags');
+                formData.append('video_id', videoId);
+                
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectedVideoTags = new Set(data.selectedTags.map(tag => parseInt(tag.id)));
+                    tempVideoTags = new Set(selectedVideoTags);
+                    
+                    videoTagsSelection.innerHTML = '';
+                    data.allTags.forEach(tag => {
+                        const isSelected = tempVideoTags.has(parseInt(tag.id));
+                        const tagDiv = document.createElement('div');
+                        tagDiv.className = 'flex items-center justify-between bg-[#202020] p-2 rounded-md';
+                        tagDiv.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="vtag_${tag.id}" 
+                                       ${isSelected ? 'checked' : ''} 
+                                       onchange="toggleVideoTag(${tag.id})" 
+                                       class="rounded">
+                                <label for="vtag_${tag.id}" class="flex-1 cursor-pointer">
+                                    <span class="px-2 py-1 rounded text-sm" 
+                                          style="background-color: ${tag.color}">
+                                        ${tag.name}
+                                    </span>
+                                </label>
+                            </div>
+                        `;
+                        videoTagsSelection.appendChild(tagDiv);
+                    });
+                }
+                
+                document.getElementById('videoTagsModal').classList.add('active');
+            } catch (error) {
+                console.error('Erro ao carregar tags:', error);
+            }
         }
 
         function updateFilterTags(tags) {
@@ -1466,6 +1573,163 @@
                 console.error('Erro:', error);
                 alert('Erro ao criar tag. Por favor, tente novamente.');
             }
+        }
+
+        // Verifica a preferência do usuário ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            const preferredUI = localStorage.getItem('uiVersion');
+            const currentFile = window.location.pathname.split('/').pop();
+            
+            if (preferredUI === 'new' && currentFile === 'originalUi.php') {
+                window.location.href = 'index.php';
+            } else if (preferredUI === 'old' && currentFile === 'index.php') {
+                window.location.href = 'originalUi.php';
+            }
+        });
+
+        function updateSelectedTagsDisplay() {
+            // Remove o container existente se não houver tags selecionadas
+            const existingContainer = document.getElementById('selectedTagsDisplay');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+
+            // Se não houver tags selecionadas, não cria o container
+            if (selectedTags.size === 0) {
+                return;
+            }
+
+            // Cria o container principal
+            const displayContainer = document.createElement('div');
+            displayContainer.id = 'selectedTagsDisplay';
+            displayContainer.className = 'mt-2'; // Adiciona margem superior
+
+            // Cria o container para as tags
+            const container = document.createElement('div');
+            container.className = 'flex flex-wrap gap-2';
+            
+            // Adiciona cada tag selecionada
+            selectedTags.forEach(tagId => {
+                const tag = allTags.find(t => t.id === parseInt(tagId));
+                if (tag) {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'px-2 py-1 rounded text-sm text-white';
+                    tagElement.style.backgroundColor = tag.color;
+                    tagElement.textContent = tag.name;
+                    container.appendChild(tagElement);
+                }
+            });
+            
+            // Adiciona o container de tags ao container principal
+            displayContainer.appendChild(container);
+            
+            // Adiciona o container principal após o botão de tags
+            const parentElement = document.getElementById('openTagsButton').parentNode;
+            parentElement.appendChild(displayContainer);
+        }
+
+        async function loadVideoTags() {
+            const videoId = document.getElementById('currentVideoId').value;
+            const formData = new FormData();
+            formData.append('action', 'get_video_tags');
+            formData.append('video_id', videoId);
+            
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectedVideoTags = new Set(data.selectedTags.map(tag => parseInt(tag.id)));
+                    tempVideoTags = new Set(selectedVideoTags);
+                    
+                    // Atualiza a exibição das tags no modal
+                    const container = document.getElementById('videoTagsSelection');
+                    let html = '';
+                    
+                    data.allTags.forEach(tag => {
+                        const isSelected = tempVideoTags.has(parseInt(tag.id));
+                        html += `
+                            <div class="flex items-center justify-between bg-[#202020] p-2 rounded-md">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="vtag_${tag.id}" 
+                                           ${isSelected ? 'checked' : ''} 
+                                           onchange="toggleVideoTag(${tag.id})" 
+                                           class="rounded">
+                                    <label for="vtag_${tag.id}" class="flex-1 cursor-pointer">
+                                        <span class="px-2 py-1 rounded text-sm" 
+                                              style="background-color: ${tag.color}">
+                                            ${tag.name}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    updateVideoTagsList(data.selectedTags);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar tags do vídeo:', error);
+            }
+        }
+
+        function toggleVideoTag(tagId) {
+            tagId = parseInt(tagId);
+            if (tempVideoTags.has(tagId)) {
+                tempVideoTags.delete(tagId);
+            } else {
+                tempVideoTags.add(tagId);
+            }
+        }
+
+        async function saveVideoTags() {
+            const videoId = document.getElementById('currentVideoId').value;
+            const formData = new FormData();
+            formData.append('action', 'save_video_tags');
+            formData.append('video_id', videoId);
+            formData.append('tags', JSON.stringify(Array.from(tempVideoTags)));
+            
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectedVideoTags = new Set(tempVideoTags);
+                    closeVideoTagsModal();
+                    await loadVideoTags();
+                    const month = document.getElementById('monthSelect').value;
+                    const year = document.getElementById('yearSelect').value;
+                    await loadVideos(month, year);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar tags do vídeo:', error);
+            }
+        }
+
+        function updateVideoTagsList(tags) {
+            const container = document.getElementById('videoTagsList');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            tags.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'px-2 py-1 rounded text-sm';
+                tagElement.style.backgroundColor = tag.color;
+                tagElement.textContent = tag.name;
+                container.appendChild(tagElement);
+            });
+        }
+
+        function closeVideoTagsModal() {
+            tempVideoTags = new Set(selectedVideoTags);
+            document.getElementById('videoTagsModal').classList.remove('active');
         }
     </script>
 </body>
