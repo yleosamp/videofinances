@@ -26,7 +26,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }aaa
+        }
         select, input, button {
             outline: none;
         }
