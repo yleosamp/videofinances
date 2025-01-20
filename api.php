@@ -1,4 +1,9 @@
 <?php
+// Configurar sessão para durar o máximo possível
+ini_set('session.gc_maxlifetime', 31536000); // 1 ano em segundos
+ini_set('session.cookie_lifetime', 31536000);
+session_set_cookie_params(31536000);
+
 header('Content-Type: application/json');
 session_start();
 
