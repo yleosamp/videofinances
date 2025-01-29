@@ -37,6 +37,7 @@ if ($_POST['action'] === 'delete_video') {
     }
     
     $video_id = intval($_POST['video_id']);
+    error_log('ID recebido: ' . $video_id);
     
     // Verificar se o vídeo pertence ao usuário
     $stmt = $conn->prepare("SELECT user_id FROM videos WHERE id = ?");

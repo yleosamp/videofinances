@@ -1092,9 +1092,11 @@
 
         async function deleteVideo() {
             const videoId = document.getElementById('currentVideoId').value;
+
+            // Defina currentMonth e currentYear aqui
             const currentMonth = document.getElementById('monthSelect').value;
             const currentYear = document.getElementById('yearSelect').value;
-            
+
             if (!confirm('Tem certeza que deseja excluir este vídeo?')) {
                 return;
             }
